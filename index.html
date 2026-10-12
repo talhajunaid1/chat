@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time WebSocket Chat</title>
+    <title>Real-Time WebSocket Chat with Friend</title>
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -12,129 +12,151 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between shadow-md z-10">
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shadow-xl z-20">
         <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white">
+            <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center text-white">
                 <i class="fa-solid fa-comments text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-wide">PeerPulse Chat</h1>
-                <p class="text-xs text-slate-400">Secure WebSocket Real-Time Messenger</p>
+                <h1 class="text-lg font-bold text-white tracking-wide flex items-center space-x-2">
+                    <span>PeerPulse</span>
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full font-medium">Live WSS</span>
+                </h1>
+                <p class="text-xs text-slate-400">Real-Time WebSocket Messenger for Friends</p>
             </div>
         </div>
 
-        <!-- Connection Status & Settings Trigger -->
-        <div class="flex items-center space-x-4">
-            <div id="connection-status-badge" class="flex items-center space-x-2 bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-600 text-xs font-medium">
+        <!-- Connection Status & Controls -->
+        <div class="flex items-center space-x-3">
+            <div id="connection-status-badge" class="flex items-center space-x-2 bg-slate-800/90 px-3.5 py-1.5 rounded-full border border-slate-700 text-xs font-medium shadow-inner">
                 <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                 <span id="status-text" class="text-slate-300">Disconnected</span>
             </div>
-            <button id="btn-settings" onclick="toggleSettingsModal(true)" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 border border-slate-600">
+            <button onclick="toggleGuideModal(true)" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 border border-slate-700">
+                <i class="fa-solid fa-circle-question"></i>
+                <span>Quick Guide</span>
+            </button>
+            <button onclick="toggleSettingsModal(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-indigo-600/30">
                 <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
+                <span>Connect & Config</span>
             </button>
         </div>
     </header>
 
     <main class="flex-1 flex overflow-hidden relative">
         
-        <!-- Sidebar: Room & Profile Info -->
-        <aside class="w-80 bg-slate-800/90 border-r border-slate-700 flex flex-col hidden md:flex z-0">
-            <div class="p-5 border-b border-slate-700/80 space-y-4">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Session Profile</h2>
+        <!-- Sidebar: Room, Peer & Connection Info -->
+        <aside class="w-80 bg-slate-900/90 border-r border-slate-800 flex flex-col hidden md:flex z-10">
+            <div class="p-5 border-b border-slate-800 space-y-4">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span>User & Room Settings</span>
+                    <i class="fa-solid fa-sliders text-indigo-400"></i>
+                </h2>
                 
                 <!-- Username Input -->
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Your Username</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Your Display Name</label>
                     <div class="flex space-x-2">
-                        <input type="text" id="input-username" value="User_" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Enter name...">
-                        <button onclick="saveUsername()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm transition">Set</button>
+                        <input type="text" id="input-username" value="Friend_A" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Your name...">
+                        <button onclick="saveUsername()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-medium transition border border-slate-700">Set</button>
                     </div>
                 </div>
 
-                <!-- Room Input -->
+                <!-- Room Name / Channel ID -->
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Room Name / Channel</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Shared Room / Channel ID</label>
                     <div class="flex space-x-2">
-                        <input type="text" id="input-room" value="general-room" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Room code...">
-                        <button onclick="joinRoom()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-sm transition">Join</button>
+                        <input type="text" id="input-room" value="my-secret-room-101" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono text-xs" placeholder="Room code...">
+                        <button onclick="applyRoomChange()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">Join</button>
                     </div>
+                    <p class="text-[11px] text-slate-500 mt-1">Both you and your friend must enter the exact same room ID.</p>
                 </div>
             </div>
 
-            <!-- Active Participants / Info box -->
+            <!-- Connection Status Box -->
             <div class="flex-1 p-5 overflow-y-auto custom-scrollbar space-y-4">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Connection Info</h2>
-                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 text-xs text-slate-300 space-y-2">
-                    <p><strong class="text-indigo-400">Server:</strong> <span id="info-server-url" class="truncate block text-slate-400">wss://echo.websocket.events</span></p>
-                    <p><strong class="text-emerald-400">Current Room:</strong> <span id="info-room-name" class="text-white">general-room</span></p>
-                    <p class="text-slate-400 pt-2 border-t border-slate-800">Note: Public echo servers broadcast messages back to all connected clients on the same endpoint or echo them back directly.</p>
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Relay Details</h2>
+                <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-xs space-y-2.5">
+                    <p><strong class="text-indigo-400">Relay Server:</strong> <span id="info-server-url" class="truncate block text-slate-400 font-mono text-[11px] mt-0.5">wss://free.blr2.piesocket.com/v3/1?api_key=VCXCEuvhGcBDP7XhiJJUDvR1e1D3eiVjgZ9VRiaV&notify_self=1</span></p>
+                    <p><strong class="text-emerald-400">Active Room:</strong> <span id="info-room-name" class="text-white font-mono">my-secret-room-101</span></p>
+                    <p class="text-slate-400 pt-2 border-t border-slate-800/80 text-[11px] leading-relaxed">Messages are relayed in real-time through the WebSocket server to anyone tuned into this channel.</p>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="pt-4 space-y-2">
-                    <button onclick="clearChatLog()" class="w-full bg-slate-700/50 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-xs font-medium transition border border-slate-600/50">
-                        <i class="fa-solid fa-trash-can mr-1.5"></i> Clear Chat History
+                <!-- Action Buttons -->
+                <div class="pt-2 space-y-2">
+                    <button onclick="connectWebSocket()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plug"></i>
+                        <span>Connect to Server</span>
                     </button>
-                    <button onclick="toggleSimulator()" id="btn-toggle-sim" class="w-full bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 py-2 rounded-lg text-xs font-medium transition border border-indigo-800/50">
-                        <i class="fa-solid fa-robot mr-1.5"></i> <span id="sim-btn-text">Enable Local Simulator</span>
+                    <button onclick="clearChatLog()" class="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 py-2 rounded-xl text-xs font-medium transition border border-slate-800">
+                        <i class="fa-solid fa-trash-can mr-1.5"></i> Clear Chat Log
                     </button>
                 </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
+                PeerPulse Secure Socket v2.4
             </div>
         </aside>
 
-        <!-- Chat Main Area -->
-        <section class="flex-1 flex flex-col bg-slate-900 relative">
+        <section class="flex-1 flex flex-col bg-slate-950 relative">
             
-            <!-- Room Bar for Mobile -->
-            <div class="bg-slate-800/60 border-b border-slate-700/60 px-4 py-2.5 flex md:hidden items-center justify-between text-xs text-slate-300">
-                <span>Room: <strong id="mobile-room-display" class="text-white">general-room</strong></span>
-                <button onclick="toggleMobileSettings()" class="text-indigo-400 underline font-medium">Configure</button>
+            <!-- Mobile Navigation / Room bar -->
+            <div class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex md:hidden items-center justify-between text-xs text-slate-300">
+                <span>Room: <strong id="mobile-room-display" class="text-white font-mono">my-secret-room-101</strong></span>
+                <button onclick="toggleSettingsModal(true)" class="text-indigo-400 underline font-medium">Configure Connection</button>
             </div>
 
             <!-- Messages Log Container -->
             <div id="chat-messages" class="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar space-y-4">
-                <!-- Welcome Banner -->
-                <div class="max-w-md mx-auto my-6 bg-slate-800/80 border border-slate-700 p-5 rounded-2xl text-center shadow-xl">
-                    <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-3 text-lg border border-indigo-500/30">
-                        <i class="fa-solid fa-shield-halved"></i>
+                
+                <!-- Welcome/Getting Started Banner -->
+                <div class="max-w-md mx-auto my-8 bg-slate-900/90 border border-slate-800 p-6 rounded-2xl text-center shadow-2xl space-y-4">
+                    <div class="w-14 h-14 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-xl border border-indigo-500/30 shadow-inner">
+                        <i class="fa-solid fa-users"></i>
                     </div>
-                    <h3 class="text-base font-semibold text-white mb-1">Welcome to PeerPulse Chat!</h3>
-                    <p class="text-xs text-slate-400 mb-4">Connect to a WebSocket relay server or enable the local simulation fallback to test conversations instantly.</p>
-                    <div class="flex justify-center space-x-2">
-                        <button onclick="connectWebSocket()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-indigo-600/20">Connect Server</button>
-                        <button onclick="toggleSimulator()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium transition">Try Simulator</button>
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-1">Chat Real-Time With Your Friend</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Share this web page with your friend, ensure you both have the same <strong class="text-slate-200">Room ID</strong> and click connect!</p>
+                    </div>
+                    <div class="pt-2 flex flex-col sm:flex-row justify-center gap-2">
+                        <button onclick="connectWebSocket()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/30">
+                            Connect Now
+                        </button>
+                        <button onclick="toggleGuideModal(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium transition border border-slate-700">
+                            How to use?
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Typing Indicator -->
-            <div id="typing-indicator" class="px-6 py-1 text-xs text-slate-400 italic hidden flex items-center space-x-2">
+            <!-- Typing Indicator Bar -->
+            <div id="typing-indicator" class="px-6 py-1.5 text-xs text-slate-400 italic hidden flex items-center space-x-2 bg-slate-900/40 border-t border-slate-900">
                 <span class="inline-flex space-x-1">
                     <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
                     <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
                     <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
                 </span>
-                <span id="typing-text">Someone is typing...</span>
+                <span id="typing-text">Your friend is typing...</span>
             </div>
 
-            <!-- Input Bar -->
-            <div class="bg-slate-800 border-t border-slate-700 p-4">
+            <!-- Chat Input Bar -->
+            <div class="bg-slate-900 border-t border-slate-800 p-4">
                 <form id="chat-form" onsubmit="handleSendMessage(event)" class="flex items-center space-x-3 max-w-5xl mx-auto">
                     <div class="relative flex-1">
-                        <input type="text" id="message-input" autocomplete="off" oninput="handleTypingInput()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 pr-10 shadow-inner" placeholder="Type your message here...">
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                        <input type="text" id="message-input" autocomplete="off" oninput="sendTypingSignal()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 pr-10 shadow-inner" placeholder="Type your message to your friend...">
+                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
                             <i class="fa-regular fa-face-smile"></i>
                         </div>
                     </div>
-                    <button type="submit" id="send-button" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-semibold transition shadow-lg shadow-indigo-600/30 flex items-center space-x-2">
+                    <button type="submit" id="send-button" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-indigo-600/30 flex items-center space-x-2">
                         <span>Send</span>
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
@@ -143,12 +165,12 @@
         </section>
     </main>
 
-    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 class="text-base font-bold text-white flex items-center space-x-2">
                     <i class="fa-solid fa-network-wired text-indigo-400"></i>
-                    <span>WebSocket Configuration</span>
+                    <span>WebSocket Relay Server Settings</span>
                 </h3>
                 <button onclick="toggleSettingsModal(false)" class="text-slate-400 hover:text-white text-sm">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -157,59 +179,110 @@
 
             <div class="space-y-4 text-sm">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">WebSocket URL Endpoint</label>
-                    <input type="text" id="modal-ws-url" value="wss://echo.websocket.events" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Default public echo server. You can substitute with your custom node.js/python websocket server (e.g. `ws://localhost:8080`).</p>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">WebSocket Server URL</label>
+                    <input type="text" id="modal-ws-url" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white text-xs font-mono focus:outline-none focus:border-indigo-500">
+                    <p class="text-[11px] text-slate-400 mt-1">Free public test relay servers or your own custom WebSocket server endpoint.</p>
                 </div>
 
-                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
-                    <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider block">Quick Presets</span>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="setPresetUrl('wss://echo.websocket.events')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs px-2.5 py-1 rounded text-slate-200">Echo Server</button>
-                        <button type="button" onclick="setPresetUrl('ws://localhost:8080')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs px-2.5 py-1 rounded text-slate-200">Localhost (8080)</button>
+                <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2.5">
+                    <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider block">Recommended Free Public Relays</span>
+                    <div class="space-y-2">
+                        <button type="button" onclick="setPresetUrl('wss://free.blr2.piesocket.com/v3/1?api_key=VCXCEuvhGcBDP7XhiJJUDvR1e1D3eiVjgZ9VRiaV&notify_self=1')" class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-lg text-xs transition">
+                            <strong class="text-white block font-mono text-indigo-300">PieSocket Public Test Relay</strong>
+                            <span class="text-[10px] text-slate-400">Reliable multi-client broadcast websocket relay</span>
+                        </button>
+                        <button type="button" onclick="setPresetUrl('wss://echo.websocket.events')" class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-lg text-xs transition">
+                            <strong class="text-white block font-mono text-indigo-300">WebSocket.events Echo</strong>
+                            <span class="text-[10px] text-slate-400">Standard debugging echo server</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-2 border-t border-slate-700">
-                <button onclick="toggleSettingsModal(false)" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-medium transition">Cancel</button>
-                <button onclick="applySettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-medium transition shadow-lg shadow-indigo-600/20">Save & Connect</button>
+            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                <button onclick="toggleSettingsModal(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium transition">Cancel</button>
+                <button onclick="applySettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/20">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="guide-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-question text-indigo-400"></i>
+                    <span>How to Chat With Your Friend</span>
+                </h3>
+                <button onclick="toggleGuideModal(false)" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+                <div class="flex items-start space-x-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <div class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">1</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">Share this App Page</strong>
+                        Send this HTML file or app link to your friend so you both have the chat interface open.
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <div class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">2</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">Match the Room ID</strong>
+                        Ensure both you and your friend type the exact same <strong class="text-indigo-400">Room / Channel ID</strong> in the sidebar (e.g. `friendship-chat-77`).
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                    <div class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">3</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">Connect to WebSocket Server</strong>
+                        Click <strong class="text-emerald-400">Connect to Server</strong>. Once the status indicator turns green, any message you send will instantly appear on your friend's screen in real time!
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-3 border-t border-slate-800">
+                <button onclick="toggleGuideModal(false)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/20">Got It!</button>
             </div>
         </div>
     </div>
 
     <script>
-        // State Variables
+        // Global State
         let ws = null;
-        let wsUrl = "wss://echo.websocket.events";
-        let username = "User_" + Math.floor(Math.random() * 9000 + 1000);
-        let roomName = "general-room";
+        let wsUrl = "wss://free.blr2.piesocket.com/v3/1?api_key=VCXCEuvhGcBDP7XhiJJUDvR1e1D3eiVjgZ9VRiaV&notify_self=1";
+        let username = "Friend_" + Math.floor(Math.random() * 900 + 100);
+        let roomName = "my-secret-room-101";
         let isConnected = false;
-        let isSimulatorActive = false;
-        let simulatorInterval = null;
-        let typingTimeout = null;
+        let typingTimer = null;
 
-        // Initialize UI values
+        // Initialize UI Elements
         document.getElementById('input-username').value = username;
+        document.getElementById('input-room').value = roomName;
+        document.getElementById('info-room-name').innerText = roomName;
         document.getElementById('info-server-url').innerText = wsUrl;
+        document.getElementById('modal-ws-url').value = wsUrl;
 
         // Save Username
         function saveUsername() {
             const val = document.getElementById('input-username').value.trim();
             if (val) {
                 username = val;
-                appendSystemMessage(`Username updated to <strong>${username}</strong>`);
+                appendSystemMessage(`Display name updated to <strong class="text-white">${username}</strong>`);
             }
         }
 
-        // Join Room
-        function joinRoom() {
+        // Apply Room Change
+        function applyRoomChange() {
             const val = document.getElementById('input-room').value.trim();
             if (val) {
                 roomName = val;
                 document.getElementById('info-room-name').innerText = roomName;
                 document.getElementById('mobile-room-display').innerText = roomName;
-                appendSystemMessage(`Joined room channel: <strong>${roomName}</strong>`);
+                appendSystemMessage(`Switched to room channel: <strong class="text-white font-mono">${roomName}</strong>`);
                 
                 if (isConnected && ws && ws.readyState === WebSocket.OPEN) {
                     sendSystemPresence("joined");
@@ -217,7 +290,7 @@
             }
         }
 
-        // Toggle Settings Modal
+        // Modals Toggle Helpers
         function toggleSettingsModal(show) {
             const modal = document.getElementById('settings-modal');
             if (show) {
@@ -226,6 +299,12 @@
             } else {
                 modal.classList.add('hidden');
             }
+        }
+
+        function toggleGuideModal(show) {
+            const modal = document.getElementById('guide-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
         }
 
         function setPresetUrl(url) {
@@ -242,46 +321,14 @@
             }
         }
 
-        // Toggle Simulator Mode
-        function toggleSimulator() {
-            isSimulatorActive = !isSimulatorActive;
-            const btnText = document.getElementById('sim-btn-text');
-            const simBtn = document.getElementById('btn-toggle-sim');
-
-            if (isSimulatorActive) {
-                if (ws) { ws.close(); }
-                updateConnectionStatus('simulated', 'Simulator Active');
-                btnText.innerText = 'Disable Simulator';
-                simBtn.className = "w-full bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 py-2 rounded-lg text-xs font-medium transition border border-emerald-800/50";
-                appendSystemMessage("Local Simulator mode activated. Automated test friend will respond to your messages!");
-                
-                // Start simulator loop
-                startSimulatorBot();
-            } else {
-                updateConnectionStatus('disconnected', 'Disconnected');
-                btnText.innerText = 'Enable Local Simulator';
-                simBtn.className = "w-full bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 py-2 rounded-lg text-xs font-medium transition border border-indigo-800/50";
-                if (simulatorInterval) clearInterval(simulatorInterval);
-                appendSystemMessage("Local Simulator deactivated.");
-            }
-        }
-
-        function startSimulatorBot() {
-            if (simulatorInterval) clearInterval(simulatorInterval);
-        }
-
-        // WebSocket Connection Handler
+        // Establish Real WebSocket Connection
         function connectWebSocket() {
-            if (isSimulatorActive) {
-                toggleSimulator(); // turn off simulator if connecting real websocket
-            }
-
             if (ws) {
                 ws.close();
             }
 
             updateConnectionStatus('connecting', 'Connecting...');
-            appendSystemMessage(`Connecting to WebSocket server at <span class="font-mono text-indigo-300">${wsUrl}</span>...`);
+            appendSystemMessage(`Connecting to WebSocket relay server...`);
 
             try {
                 ws = new WebSocket(wsUrl);
@@ -289,31 +336,41 @@
                 ws.onopen = function() {
                     isConnected = true;
                     updateConnectionStatus('connected', 'Connected');
-                    appendSystemMessage("Successfully connected to WebSocket server!");
+                    appendSystemMessage("Successfully connected to WebSocket relay! Ready to chat.");
                     sendSystemPresence("joined");
                 };
 
                 ws.onmessage = function(event) {
                     try {
-                        // Attempt to parse JSON message format
-                        const data = JSON.parse(event.data);
-                        if (data.room === roomName || !data.room) {
+                        const rawData = event.data;
+                        let data;
+                        try {
+                            data = JSON.parse(rawData);
+                        } catch(err) {
+                            data = { type: 'chat', sender: 'Peer', text: rawData, room: roomName, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+                        }
+
+                        // Filter messages by room if room property exists
+                        if (!data.room || data.room === roomName) {
                             if (data.type === 'chat') {
                                 displayIncomingMessage(data.sender, data.text, data.time, data.sender === username);
                             } else if (data.type === 'system') {
                                 appendSystemMessage(data.text);
+                            } else if (data.type === 'typing') {
+                                if (data.sender !== username) {
+                                    showTypingIndicator(`${data.sender} is typing...`);
+                                }
                             }
                         }
                     } catch (e) {
-                        // If raw string echo (e.g. echo.websocket.events standard behavior)
-                        displayIncomingMessage("EchoServer", event.data, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), false);
+                        console.error("Error parsing incoming message:", e);
                     }
                 };
 
                 ws.onerror = function(error) {
-                    console.error("WebSocket Error:", error);
+                    console.error("WebSocket error:", error);
                     updateConnectionStatus('error', 'Connection Error');
-                    appendSystemMessage("WebSocket error encountered. Check URL or firewall settings.");
+                    appendSystemMessage("WebSocket error encountered. Please check your network or relay server URL.");
                 };
 
                 ws.onclose = function() {
@@ -324,7 +381,7 @@
 
             } catch (err) {
                 updateConnectionStatus('error', 'Failed');
-                appendSystemMessage(`Failed to initialize WebSocket: ${err.message}`);
+                appendSystemMessage(`Failed to create WebSocket: ${err.message}`);
             }
         }
 
@@ -338,8 +395,6 @@
                 dot.classList.add('bg-emerald-500', 'animate-pulse');
             } else if (state === 'connecting') {
                 dot.classList.add('bg-amber-500', 'animate-pulse');
-            } else if (state === 'simulated') {
-                dot.classList.add('bg-indigo-400', 'animate-pulse');
             } else {
                 dot.classList.add('bg-rose-500');
             }
@@ -362,50 +417,37 @@
                 time: timeStr
             };
 
-            if (isSimulatorActive) {
-                // Display user message
-                displayIncomingMessage(username, text, timeStr, true);
-                input.value = '';
-                
-                // Simulate reply after 1 second
-                showTypingIndicator("Alex (Bot) is typing...");
-                setTimeout(() => {
-                    hideTypingIndicator();
-                    const botReplies = [
-                        "That's super interesting! Tell me more about it.",
-                        "I totally agree with your point.",
-                        "Awesome! Let's work on that project together.",
-                        "Received loud and clear over the WebSocket simulator! 🚀",
-                        "Haha, classic! What else is new?"
-                    ];
-                    const randomReply = botReplies[Math.floor(Math.random() * botReplies.length)];
-                    displayIncomingMessage("Alex (Bot)", randomReply, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), false);
-                }, 1200);
-
-            } else if (ws && ws.readyState === WebSocket.OPEN) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify(payload));
-                // If using public echo server, display instantly as well
-                if (wsUrl.includes("echo.websocket.events")) {
-                    displayIncomingMessage(username, text, timeStr, true);
-                }
                 input.value = '';
             } else {
-                appendSystemMessage("Cannot send message. Not connected to WebSocket server. Enable Simulator or connect to a server.");
+                appendSystemMessage("Cannot send message. You are not connected to a WebSocket server. Click 'Connect & Config'.");
             }
         }
 
         function sendSystemPresence(action) {
-            if (ws && ws.readyState === WebSocket.OPEN && !wsUrl.includes("echo.websocket.events")) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
                 const payload = {
                     type: 'system',
                     room: roomName,
-                    text: `<strong>${username}</strong> has ${action} room <em>${roomName}</em>.`
+                    text: `<strong class="text-white">${username}</strong> has ${action} room <code class="text-indigo-300">${roomName}</code>.`
                 };
                 ws.send(JSON.stringify(payload));
             }
         }
 
-        // UI Message Rendering Helpers
+        function sendTypingSignal() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                clearTimeout(typingTimer);
+                ws.send(JSON.stringify({
+                    type: 'typing',
+                    room: roomName,
+                    sender: username
+                }));
+            }
+        }
+
+        // UI Rendering Helpers
         function displayIncomingMessage(sender, text, time, isSelf) {
             const container = document.getElementById('chat-messages');
             
@@ -414,17 +456,17 @@
             if (banner) banner.remove();
 
             const wrapper = document.createElement('div');
-            wrapper.className = `flex flex-col mb-3 ${isSelf ? 'items-end' : 'items-start'}`;
+            wrapper.className = `flex flex-col mb-3.5 ${isSelf ? 'items-end' : 'items-start'}`;
 
             wrapper.innerHTML = `
                 <div class="flex items-center space-x-2 mb-1 px-1">
                     <span class="text-xs font-semibold ${isSelf ? 'text-indigo-400' : 'text-slate-300'}">${escapeHtml(sender)}</span>
                     <span class="text-[10px] text-slate-500">${time}</span>
                 </div>
-                <div class="max-w-[80%] md:max-w-[60%] rounded-2xl px-4 py-3 text-sm shadow-md leading-relaxed ${
+                <div class="max-w-[85%] md:max-w-[65%] rounded-2xl px-4 py-3 text-sm shadow-md leading-relaxed ${
                     isSelf 
-                        ? 'bg-indigo-600 text-white rounded-br-none' 
-                        : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-bl-none'
+                        ? 'bg-indigo-600 text-white rounded-br-none shadow-indigo-600/10' 
+                        : 'bg-slate-900 text-slate-100 border border-slate-800 rounded-bl-none'
                 }">
                     ${escapeHtml(text)}
                 </div>
@@ -440,9 +482,9 @@
             if (banner) banner.remove();
 
             const div = document.createElement('div');
-            div.className = "flex justify-center my-2";
+            div.className = "flex justify-center my-3";
             div.innerHTML = `
-                <div class="bg-slate-800/60 border border-slate-700/60 text-slate-400 text-xs px-3 py-1.5 rounded-full text-center">
+                <div class="bg-slate-900/80 border border-slate-800 text-slate-400 text-xs px-3.5 py-1.5 rounded-full text-center shadow-inner">
                     <i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i> ${htmlText}
                 </div>
             `;
@@ -454,40 +496,28 @@
             const container = document.getElementById('chat-messages');
             container.innerHTML = `
                 <div class="flex justify-center my-6">
-                    <div class="bg-slate-800/60 border border-slate-700/60 text-slate-400 text-xs px-4 py-2 rounded-xl">
+                    <div class="bg-slate-900 border border-slate-800 text-slate-400 text-xs px-4 py-2 rounded-xl">
                         Chat log cleared.
                     </div>
                 </div>
             `;
         }
 
-        function handleTypingInput() {
-            // Typing feel trigger
-        }
-
         function showTypingIndicator(text) {
             const ind = document.getElementById('typing-indicator');
-            document.getElementById('typing-text').innerText = text || "Someone is typing...";
+            document.getElementById('typing-text').innerText = text || "Your friend is typing...";
             ind.classList.remove('hidden');
             const container = document.getElementById('chat-messages');
             container.scrollTop = container.scrollHeight;
-        }
 
-        function hideTypingIndicator() {
-            const ind = document.getElementById('typing-indicator');
-            ind.classList.add('hidden');
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                ind.classList.add('hidden');
+            }, 3000);
         }
 
         function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        }
-
-        // Mobile settings toggle helper
-        function toggleMobileSettings() {
-            const aside = document.querySelector('aside');
-            aside.classList.toggle('hidden');
-            aside.classList.toggle('absolute');
-            aside.classList.add('inset-y-0', 'left-0', 'z-20', 'shadow-2xl');
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
     </script>
 </body>
